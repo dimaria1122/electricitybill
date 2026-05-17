@@ -41,7 +41,7 @@ def load_settings() -> Settings:
     synjones_auth = _required_env("SYNJONES_AUTH") if auth_mode == "manual" else None
     login_username = _required_env("LOGIN_USERNAME") if auth_mode == "login" else None
     login_password = _required_env("LOGIN_PASSWORD") if auth_mode == "login" else None
-    login_device_token = _required_env("LOGIN_DEVICE_TOKEN") if auth_mode == "login" else None
+    login_device_token = (os.getenv("LOGIN_DEVICE_TOKEN", "web").strip() or "web") if auth_mode == "login" else None
 
     return Settings(
         auth_mode=auth_mode,

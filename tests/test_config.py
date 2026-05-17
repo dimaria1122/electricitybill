@@ -6,6 +6,18 @@ from electricitybill.config import Settings, load_settings
 @pytest.fixture(autouse=True)
 def disable_dotenv_loading(monkeypatch):
     monkeypatch.setattr("electricitybill.config.load_dotenv", lambda: None)
+    for name in (
+        "AUTH_MODE",
+        "SYNJONES_AUTH",
+        "LOGIN_USERNAME",
+        "LOGIN_PASSWORD",
+        "LOGIN_DEVICE_TOKEN",
+        "ROOM",
+        "FEEITEM_ID",
+        "QUERY_INTERVAL_MINUTES",
+        "DATABASE_PATH",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
 
 def test_settings_loads_required_environment(monkeypatch):
@@ -92,7 +104,6 @@ def test_settings_loads_login_mode(monkeypatch):
     [
         ("LOGIN_USERNAME", "LOGIN_USERNAME"),
         ("LOGIN_PASSWORD", "LOGIN_PASSWORD"),
-        ("LOGIN_DEVICE_TOKEN", "LOGIN_DEVICE_TOKEN"),
     ],
 )
 def test_settings_rejects_missing_login_credentials(monkeypatch, missing_name, match):
@@ -106,6 +117,19 @@ def test_settings_rejects_missing_login_credentials(monkeypatch, missing_name, m
 
     with pytest.raises(ValueError, match=match):
         load_settings()
+
+
+def test_settings_defaults_login_device_token_to_web(monkeypatch):
+    monkeypatch.setenv("AUTH_MODE", "login")
+    monkeypatch.setenv("LOGIN_USERNAME", "student-id")
+    monkeypatch.setenv("LOGIN_PASSWORD", "student-password")
+    monkeypatch.setenv("LOGIN_DEVICE_TOKEN", "")
+    monkeypatch.setenv("ROOM", "room-001")
+    monkeypatch.setenv("FEEITEM_ID", "261")
+
+    settings = load_settings()
+
+    assert settings.login_device_token == "web"
 
 
 def test_settings_rejects_invalid_auth_mode(monkeypatch):

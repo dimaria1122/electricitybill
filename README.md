@@ -161,7 +161,8 @@ SYNJONES_AUTH=bearer paste_token_here
 AUTH_MODE=login
 LOGIN_USERNAME=your_student_id
 LOGIN_PASSWORD=your_password
-LOGIN_DEVICE_TOKEN=your_device_token
+# 可选；不填时默认使用 web
+LOGIN_DEVICE_TOKEN=web
 ROOM=your_authorized_room_id
 FEEITEM_ID=261
 QUERY_INTERVAL_MINUTES=30
@@ -169,6 +170,8 @@ DATABASE_PATH=electricity.db
 ```
 
 自动登录模式会在首次查询时用账号密码获取 token，并且只把 token 缓存在当前进程内存里；程序不会把 token、密码或 refresh token 写入数据库，也不会返回给浏览器页面。
+
+`LOGIN_DEVICE_TOKEN` 可以不填；不填或留空时程序默认使用 `web`。如果你的学校环境里 `web` 登录失败，再从自己 App 的登录请求里抓取真实 `device_token` 后填入。
 
 ## 验证一次查询
 
