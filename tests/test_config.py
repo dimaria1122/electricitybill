@@ -33,7 +33,7 @@ def test_settings_repr_does_not_include_token(monkeypatch):
 
 
 def test_settings_rejects_missing_token(monkeypatch):
-    monkeypatch.delenv("SYNJONES_AUTH", raising=False)
+    monkeypatch.setenv("SYNJONES_AUTH", "")
     monkeypatch.setenv("ROOM", "room-001")
     monkeypatch.setenv("FEEITEM_ID", "261")
 
