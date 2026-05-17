@@ -21,7 +21,7 @@ synjones-auth: bearer <token>
 Request body:
 
 ```text
-feeitemid=261&type=IEC&level=1&room=300662222
+feeitemid=261&type=IEC&level=1&room=<authorized_room_id>
 ```
 
 Successful response shape:
@@ -32,12 +32,12 @@ Successful response shape:
   "code": 200,
   "map": {
     "showData": {
-      "信息": "房间名称: 300662222 剩余金额:105.123571"
+      "信息": "房间名称: <authorized_room_id> 剩余金额:105.123571"
     },
     "data": {
-      "aid": "0030000000007301",
-      "account": "23217",
-      "room": "300662222"
+      "aid": "<account_aid>",
+      "account": "<account_id>",
+      "room": "<authorized_room_id>"
     }
   }
 }
@@ -110,7 +110,7 @@ Reads `.env` values:
 
 ```env
 SYNJONES_AUTH=bearer xxx
-ROOM=300662222
+ROOM=your_authorized_room_id
 FEEITEM_ID=261
 QUERY_INTERVAL_MINUTES=30
 ```

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>寝室电费监控</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <div>
+          <p class="eyebrow">HuiXinYiXiao Monitor</p>
+          <h1>寝室电费监控</h1>
+        </div>
+        <button id="refreshButton">立即刷新</button>
+      </header>
+      <section id="message" class="message">正在加载...</section>
+      <section class="cards">
+        <article><span>当前余额</span><strong id="currentBalance">--</strong></article>
+        <article><span>最近 24 小时消耗</span><strong id="consumption24h">--</strong></article>
+        <article><span>7 日日均消耗</span><strong id="average7d">--</strong></article>
+        <article><span>预计还能用</span><strong id="daysRemaining">--</strong></article>
+      </section>
+      <section class="chart-card">
+        <h2>余额曲线</h2>
+        <canvas id="balanceChart"></canvas>
+      </section>
+      <section class="chart-card">
+        <h2>每次变化</h2>
+        <canvas id="deltaChart"></canvas>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

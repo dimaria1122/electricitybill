@@ -1,0 +1,14 @@
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f6f7fb; color: #172033; }
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 18px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.eyebrow { color: #6b7280; margin: 0; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; }
+h1 { margin: 4px 0 0; font-size: 32px; }
+button { border: 0; border-radius: 12px; padding: 12px 18px; background: #f5a623; color: white; font-weight: 700; cursor: pointer; }
+.message { margin: 22px 0; padding: 14px 16px; border-radius: 12px; background: #fff7e6; color: #8a5a00; }
+.message.error { background: #fee2e2; color: #991b1b; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 18px; }
+article, .chart-card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 12px 30px rgba(15, 23, 42, .08); }
+article span { display: block; color: #6b7280; margin-bottom: 8px; }
+article strong { font-size: 28px; }
+.chart-card { margin-top: 18px; }
+canvas { max-height: 360px; }

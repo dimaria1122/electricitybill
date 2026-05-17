@@ -74,7 +74,7 @@ Create `.env.example` with:
 
 ```env
 SYNJONES_AUTH=bearer paste_token_here
-ROOM=300662222
+ROOM=your_authorized_room_id
 FEEITEM_ID=261
 QUERY_INTERVAL_MINUTES=30
 DATABASE_PATH=electricity.db
@@ -94,7 +94,7 @@ from electricitybill.config import Settings, load_settings
 
 def test_settings_loads_required_environment(monkeypatch):
     monkeypatch.setenv("SYNJONES_AUTH", "bearer token-value")
-    monkeypatch.setenv("ROOM", "300662222")
+    monkeypatch.setenv("ROOM", "room-001")
     monkeypatch.setenv("FEEITEM_ID", "261")
     monkeypatch.setenv("QUERY_INTERVAL_MINUTES", "30")
     monkeypatch.setenv("DATABASE_PATH", "test.db")
@@ -103,7 +103,7 @@ def test_settings_loads_required_environment(monkeypatch):
 
     assert settings == Settings(
         synjones_auth="bearer token-value",
-        room="300662222",
+        room="room-001",
         feeitem_id="261",
         query_interval_minutes=30,
         database_path="test.db",
@@ -112,7 +112,7 @@ def test_settings_loads_required_environment(monkeypatch):
 
 def test_settings_rejects_missing_token(monkeypatch):
     monkeypatch.delenv("SYNJONES_AUTH", raising=False)
-    monkeypatch.setenv("ROOM", "300662222")
+    monkeypatch.setenv("ROOM", "room-001")
     monkeypatch.setenv("FEEITEM_ID", "261")
 
     with pytest.raises(ValueError, match="SYNJONES_AUTH"):
@@ -121,7 +121,7 @@ def test_settings_rejects_missing_token(monkeypatch):
 
 def test_settings_rejects_non_positive_interval(monkeypatch):
     monkeypatch.setenv("SYNJONES_AUTH", "bearer token-value")
-    monkeypatch.setenv("ROOM", "300662222")
+    monkeypatch.setenv("ROOM", "room-001")
     monkeypatch.setenv("FEEITEM_ID", "261")
     monkeypatch.setenv("QUERY_INTERVAL_MINUTES", "0")
 
@@ -202,20 +202,20 @@ def test_parse_balance_response_extracts_room_and_balance():
     payload = {
         "msg": "success",
         "code": 200,
-        "map": {"showData": {"信息": "房间名称: 300662222 剩余金额:105.123571"}},
+        "map": {"showData": {"信息": "房间名称: room-001 剩余金额:105.123571"}},
     }
 
     result = parse_balance_response(payload)
 
     assert result == ParsedBalance(
-        room="300662222",
+        room="room-001",
         balance=105.123571,
-        display_text="房间名称: 300662222 剩余金额:105.123571",
+        display_text="房间名称: room-001 剩余金额:105.123571",
     )
 
 
 def test_parse_balance_response_rejects_missing_balance_pattern():
-    payload = {"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: 300662222"}}}
+    payload = {"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: room-001"}}}
 
     with pytest.raises(BalanceParseError, match="balance"):
         parse_balance_response(payload)
@@ -299,8 +299,8 @@ from electricitybill.client import AuthError, HuiXinYiXiaoClient, QueryError
 
 @pytest.mark.asyncio
 async def test_client_posts_expected_form_and_auth_header(httpx_mock):
-    httpx_mock.add_response(json={"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: 300662222 剩余金额:105.123571"}}})
-    client = HuiXinYiXiaoClient(auth_token="bearer abc", room="300662222", feeitem_id="261")
+    httpx_mock.add_response(json={"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: room-001 剩余金额:105.123571"}}})
+    client = HuiXinYiXiaoClient(auth_token="bearer abc", room="room-001", feeitem_id="261")
 
     payload = await client.fetch_balance_payload()
 
@@ -308,14 +308,14 @@ async def test_client_posts_expected_form_and_auth_header(httpx_mock):
     assert request.url == "http://121.251.19.62/charge/feeitem/getThirdData"
     assert request.headers["synjones-auth"] == "bearer abc"
     assert request.headers["content-type"] == "application/x-www-form-urlencoded"
-    assert request.content == b"feeitemid=261&type=IEC&level=1&room=300662222"
+    assert request.content == b"feeitemid=261&type=IEC&level=1&room=room-001"
     assert payload["code"] == 200
 
 
 @pytest.mark.asyncio
 async def test_client_raises_auth_error_for_401(httpx_mock):
     httpx_mock.add_response(status_code=401, json={"msg": "缺失令牌，鉴权失败"})
-    client = HuiXinYiXiaoClient(auth_token="bearer bad", room="300662222", feeitem_id="261")
+    client = HuiXinYiXiaoClient(auth_token="bearer bad", room="room-001", feeitem_id="261")
 
     with pytest.raises(AuthError, match="authentication failed"):
         await client.fetch_balance_payload()
@@ -324,7 +324,7 @@ async def test_client_raises_auth_error_for_401(httpx_mock):
 @pytest.mark.asyncio
 async def test_client_raises_query_error_for_bad_json(httpx_mock):
     httpx_mock.add_response(text="not json")
-    client = HuiXinYiXiaoClient(auth_token="bearer abc", room="300662222", feeitem_id="261")
+    client = HuiXinYiXiaoClient(auth_token="bearer abc", room="room-001", feeitem_id="261")
 
     with pytest.raises(QueryError, match="JSON"):
         await client.fetch_balance_payload()
@@ -415,11 +415,11 @@ def test_storage_inserts_and_lists_readings(tmp_path):
     storage = Storage(tmp_path / "electricity.db")
     storage.initialize()
 
-    storage.add_reading(room="300662222", balance=105.12, display_text="房间名称: 300662222 剩余金额:105.12", recorded_at="2026-05-16T12:00:00+00:00")
+    storage.add_reading(room="room-001", balance=105.12, display_text="房间名称: room-001 剩余金额:105.12", recorded_at="2026-05-16T12:00:00+00:00")
 
     readings = storage.list_readings()
     assert len(readings) == 1
-    assert readings[0]["room"] == "300662222"
+    assert readings[0]["room"] == "room-001"
     assert readings[0]["balance"] == 105.12
 
 
@@ -436,8 +436,8 @@ def test_storage_records_and_returns_last_event(tmp_path):
 def test_storage_returns_latest_reading(tmp_path):
     storage = Storage(tmp_path / "electricity.db")
     storage.initialize()
-    storage.add_reading(room="300662222", balance=105.12, display_text="first", recorded_at="2026-05-16T12:00:00+00:00")
-    storage.add_reading(room="300662222", balance=104.90, display_text="second", recorded_at="2026-05-16T12:30:00+00:00")
+    storage.add_reading(room="room-001", balance=105.12, display_text="first", recorded_at="2026-05-16T12:00:00+00:00")
+    storage.add_reading(room="room-001", balance=104.90, display_text="second", recorded_at="2026-05-16T12:30:00+00:00")
 
     latest = storage.latest_reading()
 
@@ -673,7 +673,7 @@ from electricitybill.storage import Storage
 
 class FakeClient:
     async def fetch_balance_payload(self):
-        return {"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: 300662222 剩余金额:105.123571"}}}
+        return {"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: room-001 剩余金额:105.123571"}}}
 
 
 class AuthFailingClient:
@@ -782,7 +782,7 @@ class FakeRefreshService:
 def test_api_returns_status_and_readings(tmp_path):
     storage = Storage(tmp_path / "electricity.db")
     storage.initialize()
-    storage.add_reading("300662222", 105.0, "first", "2026-05-16T12:00:00+00:00")
+    storage.add_reading("room-001", 105.0, "first", "2026-05-16T12:00:00+00:00")
     storage.add_query_event("success", "ok", "2026-05-16T12:00:00+00:00")
     app = create_app(storage=storage, refresh_service=FakeRefreshService(), enable_scheduler=False)
 
