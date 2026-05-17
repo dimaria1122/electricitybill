@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from electricitybill.auth import LoginTokenProvider, StaticTokenProvider
 from electricitybill.client import HuiXinYiXiaoClient
 from electricitybill.config import load_settings
 from electricitybill.metrics import summarize_readings
@@ -27,7 +28,15 @@ def create_app(
         settings = load_settings()
         storage = Storage(settings.database_path)
         storage.initialize()
-        client = HuiXinYiXiaoClient(settings.synjones_auth, settings.room, settings.feeitem_id)
+        if settings.auth_mode == "login":
+            token_provider = LoginTokenProvider(
+                username=settings.login_username or "",
+                password=settings.login_password or "",
+                device_token=settings.login_device_token or "",
+            )
+        else:
+            token_provider = StaticTokenProvider(settings.synjones_auth or "")
+        client = HuiXinYiXiaoClient(token_provider, settings.room, settings.feeitem_id)
         refresh_service = RefreshService(client, storage)
     else:
         storage.initialize()

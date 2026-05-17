@@ -21,6 +21,12 @@
   - 按当前速度预计还能用多少天。
 - token 失效时会在页面提示，不会在页面显示 token。
 
+## Dashboard 示例
+
+下面是本地服务成功查询后的监控页面示例：
+
+<img src="./docs/images/dashboard-demo.png" alt="寝室电费监控 Dashboard" width="900">
+
 ## 目录说明
 
 ```text
@@ -43,6 +49,7 @@ cp .env.example .env
 然后编辑 `.env`：
 
 ```env
+AUTH_MODE=manual
 SYNJONES_AUTH=bearer 你的token
 ROOM=你的寝室号
 FEEITEM_ID=261
@@ -146,6 +153,23 @@ SYNJONES_AUTH=bearer paste_token_here
 
 不要把真实 token 发给别人，也不要提交到 GitHub。
 
+## 自动登录模式
+
+如果确认你的账号登录接口不需要验证码、短信验证或其他风控比如说慧新易校，可以把 `.env` 切换为自动登录模式：
+
+```env
+AUTH_MODE=login
+LOGIN_USERNAME=your_student_id
+LOGIN_PASSWORD=your_password
+LOGIN_DEVICE_TOKEN=your_device_token
+ROOM=your_authorized_room_id
+FEEITEM_ID=261
+QUERY_INTERVAL_MINUTES=30
+DATABASE_PATH=electricity.db
+```
+
+自动登录模式会在首次查询时用账号密码获取 token，并且只把 token 缓存在当前进程内存里；程序不会把 token、密码或 refresh token 写入数据库，也不会返回给浏览器页面。
+
 ## 验证一次查询
 
 启动服务后，打开页面点击「立即刷新」。
@@ -163,7 +187,7 @@ http://127.0.0.1:8000/api/status
 ## 运行测试
 
 ```bash
-python -m pytest tests -v
+python3 -m pytest tests -v
 ```
 
 如果你使用的是 macOS 自带 Python，推荐用虚拟环境里的 Python：
@@ -171,6 +195,7 @@ python -m pytest tests -v
 ```bash
 .venv/bin/python -m pytest tests -v
 ```
+
 
 ## 常见问题
 
@@ -195,7 +220,7 @@ http://127.0.0.1:8000/api/status
 查看 `last_query_status`：
 
 - `success`：查询成功；
-- `auth_error`：token 失效或填写错误；
+- `auth_error`：手动 token 失效/填写错误，或自动登录账号、密码、device token 有误；
 - `error`：网络、接口或解析失败。
 
 ### 3. 为什么没有历史数据？
@@ -207,21 +232,20 @@ http://127.0.0.1:8000/api/status
 - 只查询你有权限查询的寝室。
 - `.env` 只保存在本地，不要上传 GitHub。
 - `electricity.db` 是本地历史数据，也不要上传。
-- 本项目不会保存慧新易校账号密码。
+- 自动登录模式会从 `.env` 读取账号密码，但不会把账号密码、access token 或 refresh token 写入数据库、页面或 README 示例。
 - 本项目不会自动缴费。
 - 本项目不会绕过验证码、短信验证、设备指纹或其他安全保护。
 
-## 后续计划：自动登录
+## 自动登录的限制
 
-如果慧新易校登录接口确实只是账号密码直登，后续可以实现自动登录并自动获取 token。
+当前自动登录只支持已经确认的账号密码直登接口。程序会在首次查询时登录一次；如果后续查电费返回认证失败，会自动重新登录并重试一次。
 
-实现前需要确认登录接口是否包含：
+如果登录接口后续出现以下情况，本项目不会尝试绕过：
 
 - 验证码；
 - 短信验证；
 - 设备指纹；
 - 加密密码；
-- refresh token；
 - 风控限制。
 
-如果存在验证码、短信或风控，本项目不会尝试绕过。更推荐优先研究是否有合法的 token 刷新接口。
+`refresh_token` 暂时不会保存或使用；如果之后确认有合法、稳定的刷新接口，可以再单独设计。

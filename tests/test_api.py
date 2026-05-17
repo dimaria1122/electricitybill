@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from electricitybill.app import create_app
+from electricitybill.config import Settings
 from electricitybill.storage import Storage
 
 
@@ -103,3 +104,44 @@ def test_dashboard_route_is_safe_before_static_files_exist(tmp_path):
 
     assert response.status_code == 200
     assert response.json()["status"] == "dashboard_not_available"
+
+
+def test_create_app_wires_login_mode_provider(monkeypatch, tmp_path, httpx_mock):
+    monkeypatch.setattr(
+        "electricitybill.app.load_settings",
+        lambda: Settings(
+            auth_mode="login",
+            synjones_auth=None,
+            login_username="student-id",
+            login_password="student-password",
+            login_device_token="device-token",
+            room="room-001",
+            feeitem_id="261",
+            query_interval_minutes=30,
+            database_path=str(tmp_path / "electricity.db"),
+        ),
+    )
+    httpx_mock.add_response(
+        url="http://121.251.19.62/berserker-auth/oauth/token",
+        json={"access_token": "ACCESS_TOKEN", "token_type": "bearer"},
+    )
+    httpx_mock.add_response(
+        url="http://121.251.19.62/charge/feeitem/getThirdData",
+        json={"msg": "success", "code": 200, "map": {"showData": {"信息": "房间名称: room-001 剩余金额:104.500000"}}},
+    )
+
+    app = create_app(enable_scheduler=False, static_dir=tmp_path / "missing-static")
+    client = TestClient(app)
+
+    response = client.post("/api/refresh")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["balance"] == 104.5
+    requests = httpx_mock.get_requests()
+    assert requests[0].content == (
+        b"username=student-id&password=student-password&grant_type=password&scope=all"
+        b"&loginFrom=app&logintype=sno&device_token=device-token&synAccessSource=app"
+    )
+    assert requests[1].headers["synjones-auth"] == "bearer ACCESS_TOKEN"
+    assert "student-password" not in response.text

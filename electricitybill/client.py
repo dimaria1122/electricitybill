@@ -1,6 +1,12 @@
-from typing import Any
+from typing import Any, Protocol
 
 import httpx
+
+
+class TokenProvider(Protocol):
+    async def get_token(self) -> str: ...
+
+    async def refresh_token(self) -> str: ...
 
 
 class QueryError(Exception):
@@ -14,15 +20,19 @@ class AuthError(QueryError):
 class HuiXinYiXiaoClient:
     ENDPOINT = "http://121.251.19.62/charge/feeitem/getThirdData"
 
-    def __init__(self, auth_token: str, room: str, feeitem_id: str, timeout_seconds: float = 10.0) -> None:
-        self.auth_token = auth_token
+    def __init__(self, token_provider: TokenProvider, room: str, feeitem_id: str, timeout_seconds: float = 10.0) -> None:
+        self.token_provider = token_provider
         self.room = room
         self.feeitem_id = feeitem_id
         self.timeout_seconds = timeout_seconds
 
+    async def refresh_auth(self) -> str:
+        return await self.token_provider.refresh_token()
+
     async def fetch_balance_payload(self) -> dict[str, Any]:
+        auth_token = await self.token_provider.get_token()
         headers = {
-            "synjones-auth": self.auth_token,
+            "synjones-auth": auth_token,
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json, text/plain, */*",
         }
